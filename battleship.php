@@ -1,5 +1,86 @@
 <?php
 
+
+/* Comment calculer les coordonnées
+
+	1)récuperer les coordonnées atk x >= 0 & x < 99 & y >= 0 & y < 99
+
+	2)vérifier que ces coordonnées ne sont pas déjà utilisées, sinon répéter étape 1
+
+	3) vérifier que cette position a un espace libre autour
+	x-1 / y  (gauche)
+	x+1 /y  (droite)
+	x / y-1 (haut)
+	x / y+1 (bas)
+	répéter 1 & 2 jusqu'à ce espace soit libre
+
+	4)attribuer ces coordonées pour l'attaqueur et prendre aléatoirement une de ces 4 coordonées d'espace libre pour le défenseur
+
+	5) répéter 1 à 4 25 fois
+*/
+
+$commander_set = false;
+$arrayMap = array();
+$coordinate_list = array();
+for($count_atk_vessel = 0; $count_atk_vessel < 25; $count_atk_vessel++){
+	$coordinate_valid = false;
+	while($coordinate_valid == false){
+		$x = rand(0,99);
+		$y = rand(0,99);
+		if(empty($arrayMap[$x][$y])){ //free position
+			if(
+				empty($arrayMap[$x-1][$y])
+				|| empty($arrayMap[$x+1][$y])
+				|| empty($arrayMap[$x][$y-1])
+				|| empty($arrayMap[$x][$y+1])
+			){ //free position around
+				if(!$commander_set){
+					$arrayMap[$x][$y] = 'commander';
+					$commander_set = true;
+				}else{
+					$arrayMap[$x][$y] = 'atk'; //random atk type
+				}
+				$random_def = rand(0,3);
+				switch($random_def){
+					case 0:
+						$arrayMap[$x-1][$y] = 'def'; //random def type
+						$coordinate_list[] = array(
+							'atk' => array('type' => $arrayMap[$x][$y], 'x' => $x, 'y' => $y),
+							'def' => array('type' => $arrayMap[$x-1][$y], 'x' => $x-1, 'y' => $y)
+						);
+						break;
+					case 1:
+						$arrayMap[$x+1][$y] = 'def'; //random def type
+						$coordinate_list[] = array(
+							'atk' => array('type' => $arrayMap[$x][$y], 'x' => $x, 'y' => $y),
+							'def' => array('type' => $arrayMap[$x+1][$y], 'x' => $x+1, 'y' => $y)
+						);
+						break;
+					case 2:
+						$arrayMap[$x][$y-1] = 'def'; //random def type
+						$coordinate_list[] = array(
+							'atk' => array('type' => $arrayMap[$x][$y], 'x' => $x, 'y' => $y),
+							'def' => array('type' => $arrayMap[$x][$y-1], 'x' => $x, 'y' => $y-1)
+						);
+						break;
+					case 3:
+						$arrayMap[$x][$y+1] = 'def'; //random def type
+						$coordinate_list[] = array(
+							'atk' => array('type' => $arrayMap[$x][$y], 'x' => $x, 'y' => $y),
+							'def' => array('type' => $arrayMap[$x][$y+1], 'x' => $x-1, 'y' => $y+1)
+						);
+						break;
+				}
+				$coordinate_valid = true;
+			}
+		}
+	}
+}
+
+//echo '<pre>$arrayMap = '.(print_r($arrayMap,true)).'</pre>';
+echo '<pre>$coordinate_list = '.(print_r($coordinate_list,true)).'</pre>';
+exit();
+
 /**
  * Class map
  */
@@ -69,16 +150,17 @@ class fleet{
 		$this->addType('atk', 'cruiser', 'Cruiser');
 		$this->addType('atk', 'destroyer', 'Destroyer');
 
-		$this->addVessel('battleship');
-
 		$count_def = 0;
 		$count_atk = 0;
 
 		$this->addVessel($this->getType('battleship'),true, $this->generateValidCoordinates());
-
+		//todo first defense ships 
+		
 		for($create_loop = 0; $create_loop < (int)(self::MAX_VESSEL/2)-1; $create_loop++){
-			if($count_def < self::MAX_VESSEL_ATK){
-				$defVessel = new vessel($this->getType($this->getRandomTypeCodeFromMain('atk')));
+			//todo atk ships
+			//todo def ships
+			if($count_def < self::MAX_VESSEL_DEF){
+				$defVessel = new vessel($this->getType($this->getRandomTypeCodeFromMain('def')));
 				$this->addVessel($defVessel);
 			}
 		}
